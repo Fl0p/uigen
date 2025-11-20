@@ -65,19 +65,19 @@ When you generate this migration checklist, you must IMMEDIATELY:
 ## Phase 2: Update Dependencies
 
 ### 2.1 Update Core Package
-- [x] **ACTION**: Run `pnpm add ai@latest`
+- [x] **ACTION**: Run `npm add ai@latest` (or `npm install ai@latest --legacy-peer-deps`)
 - [x] **ACTION**: Verify version in package.json shows ^5.0.0 or higher
 - [x] **INFO**: New version installed: 5.0.98
 
 ### 2.2 Update Provider & UI Packages (if used)
 - [x] **ACTION**: Check package.json for these packages and update if present:
-  - `pnpm add @ai-sdk/openai@latest @ai-sdk/anthropic@latest @ai-sdk/google@latest` (providers)
-  - `pnpm add @ai-sdk/react@latest @ai-sdk/rsc@latest` (UI packages)
-- [x] **INFO**: Updated @ai-sdk/anthropic to 2.0.45
+  - `npm add @ai-sdk/openai@latest @ai-sdk/anthropic@latest @ai-sdk/google@latest --legacy-peer-deps` (providers)
+  - `npm add @ai-sdk/react@latest @ai-sdk/rsc@latest --legacy-peer-deps` (UI packages)
+- [x] **INFO**: Updated @ai-sdk/anthropic to 2.0.45, @ai-sdk/react to latest
 
 ### 2.3 Update Other Dependencies
-- [x] **ACTION**: Update zod: `pnpm add zod@latest` (required 4.1.8+ for TypeScript performance)
-- [x] **ACTION**: Run `pnpm install` to ensure lock file is updated
+- [x] **ACTION**: Update zod: `npm add zod@latest --legacy-peer-deps` (required 4.1.8+ for TypeScript performance)
+- [x] **ACTION**: Run `npm install` to ensure lock file is updated
 - [x] **INFO**: Updated zod to 4.1.12
 
 ### 2.4 Add Legacy AI SDK Alias (Required for Phase 5)
@@ -92,10 +92,10 @@ When you generate this migration checklist, you must IMMEDIATELY:
   }
 }
 ```
-- [x] **ACTION**: Run `pnpm install`
+- [x] **ACTION**: Run `npm install --legacy-peer-deps`
 
 ### 2.5 Commit Changes
-- [x] **ACTION**: Commit package updates: `git add package.json pnpm-lock.yaml && git commit -m "Update to AI SDK 5"`
+- [x] **ACTION**: Commit package updates: `git add package.json package-lock.json && git commit -m "Update to AI SDK 5"`
 
 **After completing Phase 2, update this file to mark items as [x], then proceed to Phase 3.**
 
@@ -135,7 +135,7 @@ This provides full type safety for messages, metadata, data parts, and tools.
 - [x] **ACTION**: Define custom UIMessage with your metadata, data parts, and tools
 - [x] **ACTION**: Replace all `UIMessage` imports with your custom type throughout codebase
 - [x] **ACTION**: Update React hooks to use custom type: `useChat<MyUIMessage>()`
-- [ ] **ACTION**: Run TypeScript check: `pnpm tsc --noEmit`
+- [x] **ACTION**: Run TypeScript check: `npx tsc --noEmit`
 - [x] **INFO**: Location of custom UIMessage type file: src/lib/convert-messages.ts (MyUIMessage type)
 
 **📖 SEARCH**: `search-guide "UIMessage type"` for detailed implementation
@@ -224,17 +224,17 @@ curl -s "https://ai-sdk-5-migration-mcp-server.vercel.app/api/conversion-functio
 
 ### 5.4 Test Conversion Thoroughly
 
-- [ ] **ACTION**: Test with actual v4 messages:
-  - [ ] Load old conversations and verify display
-  - [ ] Test text-only messages
-  - [ ] Test messages with tool calls (all states)
+- [x] **ACTION**: Test with actual v4 messages:
+  - [x] Load old conversations and verify display
+  - [x] Test text-only messages
+  - [x] Test messages with tool calls (all states)
   - [ ] Test messages with reasoning traces
   - [ ] Test messages with file/data attachments
   - [ ] Test continuing old conversations with new messages
 
 - [ ] **ACTION**: Test bidirectional conversion (load old → save new → load again)
-- [ ] **ACTION**: Verify no TypeScript errors: `pnpm tsc --noEmit`
-- [ ] **ACTION**: Check for runtime errors in browser console
+- [x] **ACTION**: Verify no TypeScript errors: `npx tsc --noEmit`
+- [x] **ACTION**: Check for runtime errors in browser console
 
 **After completing Phase 5, proceed to Phase 6.**
 
@@ -314,9 +314,9 @@ curl -s "https://ai-sdk-5-migration-mcp-server.vercel.app/api/conversion-functio
 ## Phase 7: Final Testing
 
 ### 7.1 Build & Type Check
-- [x] `pnpm tsc --noEmit` passes with no errors
-- [x] `pnpm build` succeeds
-- [ ] `pnpm lint` passes (if applicable)
+- [x] `npx tsc --noEmit` passes with no errors
+- [x] `npm run build` succeeds
+- [ ] `npm run lint` passes (if applicable)
 
 ### 7.2 Test with Historical Data (if applicable)
 - [ ] Load old conversations from database
@@ -379,12 +379,12 @@ This phase is OPTIONAL. Your app works with the runtime conversion layer from Ph
 - [ ] **ACTION**: Remove all `convertV5MessageToV4` usage
 
 ### 8.2 Remove Legacy Dependencies
-- [ ] **ACTION**: Remove `ai-legacy` package: `pnpm remove ai-legacy`
-- [ ] **ACTION**: Run `pnpm install`
+- [ ] **ACTION**: Remove `ai-legacy` package: `npm uninstall ai-legacy`
+- [ ] **ACTION**: Run `npm install`
 
 ### 8.3 Verify Cleanup
-- [ ] **ACTION**: Run `pnpm tsc --noEmit`
-- [ ] **ACTION**: Run `pnpm build`
+- [ ] **ACTION**: Run `npx tsc --noEmit`
+- [ ] **ACTION**: Run `npm run build`
 - [ ] **ACTION**: Test application with real data
 
 ### 8.4 Commit Changes
