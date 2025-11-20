@@ -30,9 +30,13 @@ export function ChatProvider({
 
   const chatOptions: any = {
     initialMessages,
-    body: {
-      files: fileSystem.serialize(),
-      projectId,
+    experimental_prepareRequestBody: ({ messages }: any) => {
+      console.log('[Chat] 🎒 Preparing request body with', messages.length, 'messages');
+      return {
+        messages,
+        files: fileSystem.serialize(),
+        projectId,
+      };
     },
     onToolCall: ({ toolCall }: any) => {
       console.log('[Chat] 🔧 Tool call received:', toolCall.toolName);

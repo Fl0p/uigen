@@ -12,20 +12,24 @@ import { convertV5MessageToV4 } from "@/lib/convert-messages";
 export async function POST(req: Request) {
   console.log('[API] 🚀 Chat request received');
   
+  const body = await req.json();
+  console.log('[API] 📦 Request body keys:', Object.keys(body));
+  
   const {
     messages,
     files,
     projectId,
-  }: { messages: UIMessage[]; files: Record<string, FileNode>; projectId?: string } =
-    await req.json();
+  }: { messages: UIMessage[]; files?: Record<string, FileNode>; projectId?: string } = body;
 
   console.log('[API] 📝 Messages count:', messages.length);
-  console.log('[API] 📁 Files count:', Object.keys(files).length);
+  console.log('[API] 📁 Files:', files ? Object.keys(files).length : 'undefined');
   console.log('[API] 🔑 Project ID:', projectId || 'none');
 
   // Reconstruct the VirtualFileSystem from serialized data
   const fileSystem = new VirtualFileSystem();
-  fileSystem.deserializeFromNodes(files);
+  if (files) {
+    fileSystem.deserializeFromNodes(files);
+  }
   console.log('[API] 💾 File system reconstructed');
 
   // Prepare system message with cache control
