@@ -63,5 +63,9 @@ Open [http://localhost:3000](http://localhost:3000)
 - TypeScript
 - Tailwind CSS v4
 - Prisma with SQLite
-- Anthropic Claude AI
-- Vercel AI SDK
+- Anthropic Claude AI (Haiku 4.5)
+- Vercel AI SDK 5.0
+
+## Development Notes
+
+This project uses `.npmrc` with `legacy-peer-deps=true` to handle peer dependency conflicts between AI SDK 5 and legacy conversion utilities. This is normal and expected.
