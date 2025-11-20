@@ -30,26 +30,25 @@ export function ChatProvider({
 
   const [input, setInput] = useState('');
 
-  const {
-    messages,
-    handleSubmit,
-    status
-  } = useAIChat({
+  const chatOptions: any = {
     initialMessages,
-
     body: {
       files: fileSystem.serialize(),
       projectId,
     },
-
-    onToolCall: ({ toolCall }) => {
+    onToolCall: ({ toolCall }: any) => {
       handleToolCall(toolCall);
     },
-
     transport: new DefaultChatTransport({
       api: "/api/chat"
     })
-  });
+  };
+
+  const {
+    messages,
+    handleSubmit,
+    status
+  } = useAIChat(chatOptions);
 
   // Track anonymous work
   useEffect(() => {
