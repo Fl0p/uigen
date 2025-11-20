@@ -28,8 +28,6 @@ export function ChatProvider({
 }: ChatContextProps & { children: ReactNode }) {
   const { fileSystem, handleToolCall } = useFileSystem();
 
-  const [input, setInput] = useState('');
-
   const chatOptions: any = {
     initialMessages,
     body: {
@@ -53,11 +51,13 @@ export function ChatProvider({
 
   const {
     messages,
-    handleSubmit,
+    sendMessage,
     status
   } = useAIChat(chatOptions);
   
-  console.log('[Chat] Current status:', status, 'messages:', messages.length);
+  const [input, setInput] = useState('');
+  
+  console.log('[Chat] Current status:', status, 'messages:', messages.length, 'input:', input);
 
   // Track anonymous work
   useEffect(() => {
@@ -71,7 +71,8 @@ export function ChatProvider({
     setInput(e.target.value);
   };
 
-  const wrappedHandleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     console.log('[ChatContext] 🚀 Submit handler called!');
     console.log('[ChatContext] Input value:', input);
     console.log('[ChatContext] Current status:', status);
@@ -80,13 +81,22 @@ export function ChatProvider({
     // Check if input is empty
     if (!input.trim()) {
       console.warn('[ChatContext] ⚠️ Input is empty, not submitting');
-      e.preventDefault();
       return;
     }
     
-    console.log('[ChatContext] ✅ Passing to useChat handleSubmit');
-    handleSubmit(e);
-    console.log('[ChatContext] 🎬 After handleSubmit call');
+    try {
+      console.log('[ChatContext] ✅ Calling sendMessage');
+      
+      // In AI SDK 5, use sendMessage instead of handleSubmit
+      sendMessage({ text: input });
+      
+      console.log('[ChatContext] 🧹 Clearing input');
+      setInput('');
+      
+      console.log('[ChatContext] 🎬 Message sent successfully');
+    } catch (error) {
+      console.error('[ChatContext] ❌ Error in sendMessage:', error);
+    }
   };
 
   return (
@@ -95,7 +105,7 @@ export function ChatProvider({
         messages: messages as UIMessage[],
         input,
         handleInputChange,
-        handleSubmit: wrappedHandleSubmit,
+        handleSubmit,
         status,
       }}
     >
