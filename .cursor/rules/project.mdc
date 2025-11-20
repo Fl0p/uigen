@@ -1,0 +1,273 @@
+---
+alwaysApply: true
+---
+# UIGen Project Rules
+
+## Project Overview
+
+UIGen is an AI-powered React component generator with live preview. It uses Claude AI (via Anthropic SDK) to generate React components based on user prompts. The application features a virtual file system (no files written to disk), live preview with hot reload, and component persistence for registered users.
+
+## Tech Stack
+
+- **Framework**: Next.js 15 (App Router) with Turbopack
+- **UI**: React 19, TypeScript, Tailwind CSS v4
+- **Database**: Prisma with SQLite
+- **AI**: Anthropic Claude AI (Haiku 4.5) via Vercel AI SDK
+- **Testing**: Vitest with React Testing Library
+- **Code Editor**: Monaco Editor
+- **JSX Transpilation**: Babel Standalone for runtime preview
+
+## Architecture Patterns
+
+### Virtual File System
+
+The core of UIGen is the `VirtualFileSystem` class (`src/lib/file-system.ts`) which implements an in-memory file system. Always use VirtualFileSystem methods rather than Node.js fs operations.
+
+**Key Conventions:**
+- All paths start with `/` (root)
+- Every project must have a `/App.jsx` file as the entry point
+- Import alias `@/` is used for all local imports (e.g., `import Counter from '@/components/Counter'`)
+- No HTML files are created - App.jsx is the entry point
+- Files are stored in a Map structure and serialized/deserialized to/from JSON for database persistence
+
+**Key Methods:**
+- `createFile(path, content)` - Creates file with auto-created parent directories
+- `updateFile(path, content)` - Updates file content
+- `deleteFile(path)` - Recursively deletes files/directories
+- `rename(oldPath, newPath)` - Moves/renames files with path updates
+- `serialize()` / `deserialize()` - Converts to/from JSON for storage
+- `viewFile(path, viewRange?)` - Returns file content with line numbers (used by AI tools)
+
+### AI Integration
+
+The chat API route (`src/app/api/chat/route.ts`) orchestrates AI-powered component generation:
+
+1. **System Prompt**: Injected from `src/lib/prompts/generation.tsx` with prompt caching enabled
+2. **AI Tools**: Two tools provided to the AI model:
+   - `str_replace_editor` - View, create, edit files (str_replace, insert operations)
+   - `file_manager` - Rename/delete files and directories
+3. **Mock Provider**: When `ANTHROPIC_API_KEY` is not set, uses `MockLanguageModel` that generates static component code
+4. **Persistence**: On completion, saves messages and file system state to database (authenticated users only)
+
+### Data Flow
+
+1. User sends chat message → `POST /api/chat`
+2. VirtualFileSystem reconstructed from serialized data
+3. AI model receives tools and generates/edits components
+4. Tools execute operations on VirtualFileSystem
+5. Responses streamed to client
+6. On finish, state persisted to Prisma database
+
+## Code Style Guidelines
+
+### TypeScript
+
+- Use strict TypeScript (`strict: true` in tsconfig.json)
+- Prefer explicit types over `any`
+- Use interfaces for object shapes, types for unions/intersections
+- Export types/interfaces when used across modules
+
+### React Components
+
+- Use functional components with TypeScript
+- Prefer named exports for components
+- Use React 19 features (no need for React.FC type annotation)
+- Keep components focused and single-purpose
+- Extract reusable logic into custom hooks
+
+### File Organization
+
+- Place components in `src/components/` organized by feature
+- Place server actions in `src/actions/` with `"use server"` directive
+- Place utilities in `src/lib/` organized by domain
+- Place hooks in `src/hooks/`
+- Tests go in `__tests__/` directories next to source files
+
+### Import Conventions
+
+- Use `@/` alias for all local imports (configured in tsconfig.json)
+- Group imports: external libraries, then internal modules
+- Use absolute paths with `@/` prefix, not relative paths
+
+### Styling
+
+- Use Tailwind CSS v4 for all styling
+- No inline styles (use Tailwind classes)
+- Use shadcn/ui components from `src/components/ui/` as base
+- Follow Tailwind utility-first approach
+
+## Database Patterns
+
+### Prisma Client Location
+
+**CRITICAL**: The Prisma client is generated to `src/generated/prisma` (not the default `node_modules/@prisma/client`). Always import from `@/generated/prisma` or use the `prisma` instance from `@/lib/prisma`.
+
+### Schema
+
+- **User**: id, email, password (bcrypt hashed), timestamps
+- **Project**: id, name, userId (nullable for anonymous), messages (JSON), data (JSON serialized VirtualFileSystem), timestamps
+
+Projects support anonymous users (userId can be null). The `anon-work-tracker.ts` handles tracking anonymous work.
+
+### Database Operations
+
+- Always use the `prisma` instance from `@/lib/prisma`
+- Use transactions for multi-step operations
+- Handle errors gracefully with try-catch blocks
+- Serialize complex data (like VirtualFileSystem) to JSON strings
+
+## Authentication
+
+JWT-based auth (`src/lib/auth.ts`) using `jose` library. Session tokens stored in cookies. Middleware (`src/middleware.ts`) protects project routes.
+
+- Use `getSession()` to get current session in server components/actions
+- Use `verifySession(request)` in middleware/API routes
+- Protected routes require authentication
+
+## Testing
+
+- Tests are located in `__tests__` directories next to source files
+- Use Vitest with jsdom environment for React component testing
+- Use React Testing Library for component tests
+- Test file system operations, contexts, and utilities
+- Mock external dependencies (API calls, Prisma)
+
+**Test Structure:**
+```typescript
+import { describe, it, expect } from 'vitest';
+
+describe('ComponentName', () => {
+  it('should do something', () => {
+    // test implementation
+  });
+});
+```
+
+## AI Tool Development
+
+When adding new AI tools:
+
+1. Create tool in `src/lib/tools/` following the pattern in `str-replace.ts` or `file-manager.ts`
+2. Use Zod for parameter validation
+3. Register tool in `src/app/api/chat/route.ts` tools object
+4. Tool must operate on the VirtualFileSystem instance
+5. Return meaningful error messages for failures
+
+**Tool Pattern:**
+```typescript
+import { z } from "zod";
+import { VirtualFileSystem } from "@/lib/file-system";
+
+const ToolParameters = z.object({
+  // define parameters
+});
+
+export const buildToolName = (fileSystem: VirtualFileSystem) => {
+  return {
+    id: "tool_id" as const,
+    args: {},
+    parameters: ToolParameters,
+    execute: async (params: z.infer<typeof ToolParameters>) => {
+      // tool implementation
+    },
+  };
+};
+```
+
+## Server Actions
+
+Server actions in `src/actions/` use `"use server"` directive and interact with Prisma. Export from `src/actions/index.ts` for cleaner imports.
+
+**Pattern:**
+```typescript
+"use server";
+
+import { prisma } from "@/lib/prisma";
+
+export async function actionName(params: Type) {
+  // implementation
+}
+```
+
+## Component Preview
+
+The preview component (`src/components/preview/`) uses Babel standalone to transpile JSX at runtime and renders components in an iframe-like environment. The transformer (`src/lib/transform/jsx-transformer.ts`) handles JSX to JS conversion.
+
+- Components must be valid React components
+- Use Tailwind CSS classes (no CSS-in-JS)
+- Import paths must use `@/` alias
+- Entry point is always `/App.jsx`
+
+## Environment Variables
+
+- `ANTHROPIC_API_KEY` - Optional. If not set, the mock provider generates static components.
+- Database URL is hardcoded in schema as `file:./dev.db` (SQLite)
+
+## Common Patterns
+
+### Adding New Features
+
+1. **UI Components**: Add to appropriate `src/components/` subdirectory
+2. **Server Logic**: Add server actions in `src/actions/`
+3. **Utilities**: Add to `src/lib/` organized by domain
+4. **API Routes**: Add to `src/app/api/` following Next.js App Router conventions
+
+### Error Handling
+
+- Use try-catch blocks for async operations
+- Return meaningful error messages
+- Log errors with `console.error` for debugging
+- Handle authentication errors gracefully
+
+### File System Operations
+
+Always use VirtualFileSystem methods rather than Node.js fs operations. The file system is entirely in-memory and persisted as JSON in the database.
+
+**Never use:**
+- `fs.readFile`, `fs.writeFile`, etc.
+- `path.join` (use VirtualFileSystem path normalization)
+- Direct file system access
+
+**Always use:**
+- `fileSystem.createFile(path, content)`
+- `fileSystem.updateFile(path, content)`
+- `fileSystem.deleteFile(path)`
+- `fileSystem.rename(oldPath, newPath)`
+
+## Development Commands
+
+```bash
+npm run setup      # Install deps, generate Prisma client, run migrations
+npm run dev        # Start dev server with Turbopack
+npm test           # Run Vitest tests
+npm run build      # Build production bundle
+npx prisma studio  # Open Prisma Studio GUI
+npx prisma generate      # Generate Prisma client
+npx prisma migrate dev   # Create and apply migrations
+npm run db:reset         # Reset database (force)
+```
+
+## Important Notes
+
+1. **Prisma Client**: Generated to `src/generated/prisma` (not default location)
+2. **File Paths**: All paths start with `/` (root)
+3. **Entry Point**: Every project must have `/App.jsx` file
+4. **Import Alias**: Use `@/` for all local imports
+5. **No HTML Files**: App.jsx is the entry point, no HTML files created
+6. **Virtual FS**: All file operations use VirtualFileSystem, never Node.js fs
+7. **Anonymous Users**: Projects support userId = null for anonymous users
+8. **AI Prompt**: Keep responses brief, use Tailwind CSS, follow file system conventions
+
+## Code Comments
+
+- Write comments in English
+- Explain "why" not "what" when code is self-explanatory
+- Document complex algorithms and business logic
+- Use JSDoc for exported functions/types when helpful
+
+## Git Conventions
+
+- Write clear, descriptive commit messages
+- Keep commits focused on single changes
+- Use conventional commit format when possible
+
