@@ -11,7 +11,10 @@ interface MessageListProps {
 }
 
 export function MessageList({ messages, isLoading }: MessageListProps) {
+  console.log('[MessageList] 📊 Rendering', messages.length, 'messages, isLoading:', isLoading);
+  
   if (messages.length === 0) {
+    console.log('[MessageList] 🏁 No messages, showing empty state');
     return (
       <div className="flex flex-col items-center justify-center h-full px-4 text-center">
         <div className="flex items-center justify-center w-14 h-14 rounded-2xl bg-blue-50 mb-4 shadow-sm">
@@ -22,6 +25,10 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
       </div>
     );
   }
+  
+  messages.forEach((msg, i) => {
+    console.log(`[MessageList] Message ${i}:`, msg.role, 'parts:', msg.parts?.length);
+  });
 
   return (
     <div className="flex flex-col h-full overflow-y-auto px-4 py-6">

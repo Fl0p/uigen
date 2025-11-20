@@ -61,6 +61,7 @@ export class MockLanguageModel implements LanguageModelV2 {
   ): AsyncGenerator<LanguageModelV2StreamPart> {
     // Count tool messages to determine which step we're on
     const toolMessageCount = messages.filter((m) => m.role === "tool").length;
+    console.log('[MockProvider] 🎭 Generating stream, tool messages:', toolMessageCount, 'user prompt:', userPrompt.substring(0, 50));
 
     // Determine component type from the original user prompt
     const promptLower = userPrompt.toLowerCase();

@@ -37,7 +37,14 @@ export function ChatProvider({
       projectId,
     },
     onToolCall: ({ toolCall }: any) => {
+      console.log('[Chat] 🔧 Tool call received:', toolCall.toolName);
       handleToolCall(toolCall);
+    },
+    onError: (error: any) => {
+      console.error('[Chat] ❌ Error:', error);
+    },
+    onFinish: ({ message }: any) => {
+      console.log('[Chat] ✅ Message finished:', message.role, 'parts:', message.parts?.length);
     },
     transport: new DefaultChatTransport({
       api: "/api/chat"
@@ -49,6 +56,8 @@ export function ChatProvider({
     handleSubmit,
     status
   } = useAIChat(chatOptions);
+  
+  console.log('[Chat] Current status:', status, 'messages:', messages.length);
 
   // Track anonymous work
   useEffect(() => {
