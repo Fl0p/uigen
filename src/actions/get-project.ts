@@ -2,6 +2,7 @@
 
 import { getSession } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { convertV4MessageToV5 } from "@/lib/convert-messages";
 
 export async function getProject(projectId: string) {
   const session = await getSession();
@@ -21,10 +22,16 @@ export async function getProject(projectId: string) {
     throw new Error("Project not found");
   }
 
+  // Parse messages from database
+  const rawMessages = JSON.parse(project.messages);
+  
+  // Convert v4 messages to v5 format
+  const messages = rawMessages.map((msg: any) => convertV4MessageToV5(msg));
+
   return {
     id: project.id,
     name: project.name,
-    messages: JSON.parse(project.messages),
+    messages,
     data: JSON.parse(project.data),
     createdAt: project.createdAt,
     updatedAt: project.updatedAt,

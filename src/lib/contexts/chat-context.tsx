@@ -1,8 +1,8 @@
 "use client";
 
 import { createContext, useContext, ReactNode, useEffect, useState } from "react";
-import { useChat as useAIChat, DefaultChatTransport } from "@ai-sdk/react";
-import { UIMessage } from "ai";
+import { useChat as useAIChat } from "@ai-sdk/react";
+import { DefaultChatTransport, UIMessage } from "ai";
 import { useFileSystem } from "./file-system-context";
 import { setHasAnonWork } from "@/lib/anon-work-tracker";
 
@@ -58,12 +58,16 @@ export function ChatProvider({
     }
   }, [messages, fileSystem, projectId]);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  };
+
   return (
     <ChatContext.Provider
       value={{
         messages,
         input,
-        e => setInput(e.target.value),
+        handleInputChange,
         handleSubmit,
         status,
       }}

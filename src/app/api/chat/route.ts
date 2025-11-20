@@ -1,39 +1,45 @@
 import type { FileNode } from "@/lib/file-system";
 import { VirtualFileSystem } from "@/lib/file-system";
-import { streamText, appendResponseMessages } from "ai";
+import { streamText, convertToModelMessages, type UIMessage } from "ai";
 import { buildStrReplaceTool } from "@/lib/tools/str-replace";
 import { buildFileManagerTool } from "@/lib/tools/file-manager";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { getLanguageModel } from "@/lib/provider";
 import { generationPrompt } from "@/lib/prompts/generation";
+import { convertV5MessageToV4 } from "@/lib/convert-messages";
 
 export async function POST(req: Request) {
   const {
     messages,
     files,
     projectId,
-  }: { messages: any[]; files: Record<string, FileNode>; projectId?: string } =
+  }: { messages: UIMessage[]; files: Record<string, FileNode>; projectId?: string } =
     await req.json();
-
-  messages.unshift({
-    role: "system",
-    content: generationPrompt,
-    providerOptions: {
-      anthropic: { cacheControl: { type: "ephemeral" } },
-    },
-  });
 
   // Reconstruct the VirtualFileSystem from serialized data
   const fileSystem = new VirtualFileSystem();
   fileSystem.deserializeFromNodes(files);
+
+  // Prepare system message with cache control
+  const systemMessage = {
+    role: "system" as const,
+    content: generationPrompt,
+    providerOptions: {
+      anthropic: { cacheControl: { type: "ephemeral" } },
+    },
+  };
+
+  // Convert UIMessages to model messages and add system message
+  const modelMessages = convertToModelMessages(messages);
+  modelMessages.unshift(systemMessage);
 
   const model = getLanguageModel();
   // Use fewer steps for mock provider to prevent repetition
   const isMockProvider = !process.env.ANTHROPIC_API_KEY;
   const result = streamText({
     model,
-    messages,
+    messages: modelMessages,
     maxOutputTokens: 10_000,
     maxSteps: isMockProvider ? 4 : 40,
     onError: (err: any) => {
@@ -43,7 +49,11 @@ export async function POST(req: Request) {
       str_replace_editor: buildStrReplaceTool(fileSystem),
       file_manager: buildFileManagerTool(fileSystem),
     },
-    onFinish: async ({ response }) => {
+  });
+
+  return result.toUIMessageStreamResponse({
+    originalMessages: messages,
+    onFinish: async ({ messages: allMessages }) => {
       // Save to project if projectId is provided and user is authenticated
       if (projectId) {
         try {
@@ -54,14 +64,8 @@ export async function POST(req: Request) {
             return;
           }
 
-          // Get the messages from the response
-          const responseMessages = response.messages || [];
-          // Combine original messages with response messages
-          /* FIXME(@ai-sdk-upgrade-v5): The `appendResponseMessages` option has been removed. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#message-persistence-changes */
-          const allMessages = appendResponseMessages({
-            messages: [...messages.filter((m) => m.role !== "system")],
-            responseMessages,
-          });
+          // Convert v5 messages to v4 format for database storage
+          const v4Messages = allMessages.map((msg) => convertV5MessageToV4(msg));
 
           await prisma.project.update({
             where: {
@@ -69,7 +73,7 @@ export async function POST(req: Request) {
               userId: session.userId,
             },
             data: {
-              messages: JSON.stringify(allMessages),
+              messages: JSON.stringify(v4Messages),
               data: JSON.stringify(fileSystem.serialize()),
             },
           });
@@ -79,8 +83,6 @@ export async function POST(req: Request) {
       }
     },
   });
-
-  return result.toUIMessageStreamResponse();
 }
 
 export const maxDuration = 120;
