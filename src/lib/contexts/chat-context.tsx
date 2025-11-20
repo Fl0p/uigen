@@ -67,7 +67,26 @@ export function ChatProvider({
   }, [messages, fileSystem, projectId]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    console.log('[ChatContext] ✍️ Input change handler called:', e.target.value.length);
     setInput(e.target.value);
+  };
+
+  const wrappedHandleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    console.log('[ChatContext] 🚀 Submit handler called!');
+    console.log('[ChatContext] Input value:', input);
+    console.log('[ChatContext] Current status:', status);
+    console.log('[ChatContext] Messages count:', messages.length);
+    
+    // Check if input is empty
+    if (!input.trim()) {
+      console.warn('[ChatContext] ⚠️ Input is empty, not submitting');
+      e.preventDefault();
+      return;
+    }
+    
+    console.log('[ChatContext] ✅ Passing to useChat handleSubmit');
+    handleSubmit(e);
+    console.log('[ChatContext] 🎬 After handleSubmit call');
   };
 
   return (
@@ -76,7 +95,7 @@ export function ChatProvider({
         messages: messages as UIMessage[],
         input,
         handleInputChange,
-        handleSubmit,
+        handleSubmit: wrappedHandleSubmit,
         status,
       }}
     >

@@ -10,8 +10,11 @@ export function ChatInterface() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const { messages, input, handleInputChange, handleSubmit, status } = useChat();
 
+  console.log('[ChatInterface] 🎯 Rendered - messages:', messages.length, 'status:', status, 'input:', input.length);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
+    console.log('[ChatInterface] 📜 Messages changed, scrolling to bottom');
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector(
         "[data-radix-scroll-area-viewport]"
@@ -21,6 +24,11 @@ export function ChatInterface() {
       }
     }
   }, [messages]);
+
+  const wrappedHandleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    console.log('[ChatInterface] 📨 Submit intercepted, passing to handleSubmit');
+    handleSubmit(e);
+  };
 
   return (
     <div className="flex flex-col h-full p-4 overflow-hidden">
@@ -33,7 +41,7 @@ export function ChatInterface() {
         <MessageInput
           input={input}
           handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
+          handleSubmit={wrappedHandleSubmit}
           isLoading={status === "submitted" || status === "streaming"}
         />
       </div>

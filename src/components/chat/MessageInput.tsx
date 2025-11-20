@@ -16,9 +16,13 @@ export function MessageInput({
   handleSubmit,
   isLoading,
 }: MessageInputProps) {
+  console.log('[MessageInput] 🎨 Rendered - input length:', input.length, 'isLoading:', isLoading);
+  
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    console.log('[MessageInput] ⌨️ Key pressed:', e.key, 'shiftKey:', e.shiftKey);
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
+      console.log('[MessageInput] 📤 Enter pressed, submitting form');
       const form = e.currentTarget.form;
       if (form) {
         form.requestSubmit();
@@ -26,12 +30,22 @@ export function MessageInput({
     }
   };
 
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    console.log('[MessageInput] 📮 Form submit triggered, input:', input);
+    e.preventDefault();
+    console.log('[MessageInput] 🚀 Calling handleSubmit');
+    handleSubmit(e);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="relative p-4 bg-white border-t border-neutral-200/60">
+    <form onSubmit={onSubmit} className="relative p-4 bg-white border-t border-neutral-200/60">
       <div className="relative max-w-4xl mx-auto">
         <textarea
           value={input}
-          onChange={handleInputChange}
+          onChange={(e) => {
+            console.log('[MessageInput] ✍️ Input changed:', e.target.value.length, 'chars');
+            handleInputChange(e);
+          }}
           onKeyDown={handleKeyDown}
           placeholder="Describe the React component you want to create..."
           disabled={isLoading}
@@ -41,6 +55,9 @@ export function MessageInput({
         <button 
           type="submit" 
           disabled={isLoading || !input.trim()}
+          onClick={(e) => {
+            console.log('[MessageInput] 🖱️ Button clicked, disabled:', isLoading || !input.trim());
+          }}
           className="absolute right-3 bottom-3 p-2.5 rounded-lg transition-all hover:bg-blue-50 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent group"
         >
           <Send className={`h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${isLoading || !input.trim() ? 'text-neutral-300' : 'text-blue-600'}`} />
