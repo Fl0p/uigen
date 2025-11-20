@@ -11,7 +11,8 @@ import { VirtualFileSystem, FileNode } from "@/lib/file-system";
 
 interface ToolCall {
   toolName: string;
-  args: any;
+  args?: any;  // v4 compatibility
+  input?: any; // v5 format
 }
 
 interface FileSystemContextType {
@@ -143,19 +144,32 @@ export function FileSystemProvider({
   }, [fileSystem, triggerRefresh]);
 
   const handleToolCall = useCallback(
-    (toolCall: ToolCall) => {
-      const { toolName, args } = toolCall;
+    (toolCall: any) => {
+      console.log('[FileSystem] 🔧 Tool call received:', JSON.stringify(toolCall, null, 2));
+      
+      const { toolName, args, input } = toolCall;
+      // In AI SDK 5, args is now input
+      const toolArgs = input || args;
+      
+      console.log('[FileSystem] 📦 Tool args:', JSON.stringify(toolArgs, null, 2));
 
       // Handle str_replace_editor tool
-      if (toolName === "str_replace_editor" && args) {
-        const { command, path, file_text, old_str, new_str, insert_line } = args;
+      if (toolName === "str_replace_editor" && toolArgs) {
+        const { command, path, file_text, old_str, new_str, insert_line } = toolArgs;
+        
+        console.log('[FileSystem] 🛠️ Command:', command, 'Path:', path);
 
         switch (command) {
           case "create":
             if (path && file_text !== undefined) {
+              console.log('[FileSystem] 📝 Creating file:', path);
               const result = fileSystem.createFileWithParents(path, file_text);
+              console.log('[FileSystem] 📄 Create result:', result);
               if (!result.startsWith("Error:")) {
                 createFile(path, file_text);
+                console.log('[FileSystem] ✅ File created successfully');
+              } else {
+                console.error('[FileSystem] ❌ Create failed:', result);
               }
             }
             break;
@@ -187,8 +201,10 @@ export function FileSystemProvider({
       }
 
       // Handle file_manager tool
-      if (toolName === "file_manager" && args) {
-        const { command, path, new_path } = args;
+      if (toolName === "file_manager" && toolArgs) {
+        const { command, path, new_path } = toolArgs;
+        
+        console.log('[FileSystem] 📁 File manager command:', command, 'Path:', path);
 
         switch (command) {
           case "rename":
