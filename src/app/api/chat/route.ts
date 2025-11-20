@@ -34,7 +34,7 @@ export async function POST(req: Request) {
   const result = streamText({
     model,
     messages,
-    maxTokens: 10_000,
+    maxOutputTokens: 10_000,
     maxSteps: isMockProvider ? 4 : 40,
     onError: (err: any) => {
       console.error(err);
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
           // Get the messages from the response
           const responseMessages = response.messages || [];
           // Combine original messages with response messages
+          /* FIXME(@ai-sdk-upgrade-v5): The `appendResponseMessages` option has been removed. Please manually migrate following https://ai-sdk.dev/docs/migration-guides/migration-guide-5-0#message-persistence-changes */
           const allMessages = appendResponseMessages({
             messages: [...messages.filter((m) => m.role !== "system")],
             responseMessages,
@@ -79,7 +80,7 @@ export async function POST(req: Request) {
     },
   });
 
-  return result.toDataStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
 
 export const maxDuration = 120;

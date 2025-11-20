@@ -98,8 +98,8 @@ export class MockLanguageModel implements LanguageModelV1 {
         type: "finish",
         finishReason: "tool-calls",
         usage: {
-          promptTokens: 50,
-          completionTokens: 30,
+          inputTokens: 50,
+          outputTokens: 30,
         },
       };
       return;
@@ -130,8 +130,8 @@ export class MockLanguageModel implements LanguageModelV1 {
         type: "finish",
         finishReason: "tool-calls",
         usage: {
-          promptTokens: 50,
-          completionTokens: 30,
+          inputTokens: 50,
+          outputTokens: 30,
         },
       };
       return;
@@ -161,8 +161,8 @@ export class MockLanguageModel implements LanguageModelV1 {
         type: "finish",
         finishReason: "tool-calls",
         usage: {
-          promptTokens: 50,
-          completionTokens: 30,
+          inputTokens: 50,
+          outputTokens: 30,
         },
       };
       return;
@@ -186,8 +186,8 @@ The component is now ready to use. You can see the preview on the right side of 
         type: "finish",
         finishReason: "stop",
         usage: {
-          promptTokens: 50,
-          completionTokens: 50,
+          inputTokens: 50,
+          outputTokens: 50,
         },
       };
       return;
@@ -460,14 +460,14 @@ export default function App() {
       toolCalls,
       finishReason: finishReason as any,
       usage: {
-        promptTokens: 100,
-        completionTokens: 200,
+        inputTokens: 100,
+        outputTokens: 200,
       },
       warnings: [],
       rawCall: {
         rawPrompt: options.prompt,
         rawSettings: {
-          maxTokens: options.maxTokens,
+          maxOutputTokens: options.maxOutputTokens,
           temperature: options.temperature,
         },
       },
