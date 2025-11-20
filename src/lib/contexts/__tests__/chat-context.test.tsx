@@ -81,8 +81,8 @@ describe("ChatContext", () => {
 
   test("initializes with project ID and messages", () => {
     const initialMessages = [
-      { id: "1", role: "user" as const, parts: [{ type: "text", text: "Hello" }] },
-      { id: "2", role: "assistant" as const, parts: [{ type: "text", text: "Hi there!" }] },
+      { id: "1", role: "user" as const, parts: [{ type: "text" as const, text: "Hello" }] },
+      { id: "2", role: "assistant" as const, parts: [{ type: "text" as const, text: "Hi there!" }] },
     ];
 
     (useAIChat as any).mockReturnValue({

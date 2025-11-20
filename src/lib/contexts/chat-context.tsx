@@ -65,7 +65,7 @@ export function ChatProvider({
   return (
     <ChatContext.Provider
       value={{
-        messages,
+        messages: messages as UIMessage[],
         input,
         handleInputChange,
         handleSubmit,

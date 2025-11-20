@@ -26,7 +26,7 @@ export async function getProject(projectId: string) {
   const rawMessages = JSON.parse(project.messages);
   
   // Convert v4 messages to v5 format
-  const messages = rawMessages.map((msg: any) => convertV4MessageToV5(msg));
+  const messages = rawMessages.map((msg: any, index: number) => convertV4MessageToV5(msg, index));
 
   return {
     id: project.id,

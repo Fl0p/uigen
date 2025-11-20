@@ -1,6 +1,6 @@
 import type { FileNode } from "@/lib/file-system";
 import { VirtualFileSystem } from "@/lib/file-system";
-import { streamText, convertToModelMessages, type UIMessage } from "ai";
+import { streamText, convertToModelMessages, stepCountIs, type UIMessage } from "ai";
 import { buildStrReplaceTool } from "@/lib/tools/str-replace";
 import { buildFileManagerTool } from "@/lib/tools/file-manager";
 import { prisma } from "@/lib/prisma";
@@ -41,7 +41,7 @@ export async function POST(req: Request) {
     model,
     messages: modelMessages,
     maxOutputTokens: 10_000,
-    maxSteps: isMockProvider ? 4 : 40,
+    stopWhen: stepCountIs(isMockProvider ? 4 : 40),
     onError: (err: any) => {
       console.error(err);
     },
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
           }
 
           // Convert v5 messages to v4 format for database storage
-          const v4Messages = allMessages.map((msg) => convertV5MessageToV4(msg));
+          const v4Messages = allMessages.map((msg) => convertV5MessageToV4(msg as any));
 
           await prisma.project.update({
             where: {

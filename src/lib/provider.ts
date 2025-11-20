@@ -88,10 +88,9 @@ export class MockLanguageModel implements LanguageModelV2 {
 
       yield {
         type: "tool-call",
-        toolCallType: "function",
         toolCallId: `call_1`,
         toolName: "str_replace_editor",
-        args: JSON.stringify({
+        input: JSON.stringify({
           command: "create",
           path: `/components/${componentName}.jsx`,
           file_text: this.getComponentCode(componentType),
@@ -104,6 +103,7 @@ export class MockLanguageModel implements LanguageModelV2 {
         usage: {
           inputTokens: 50,
           outputTokens: 30,
+          totalTokens: 80,
         },
       };
       return;
@@ -122,10 +122,9 @@ export class MockLanguageModel implements LanguageModelV2 {
 
       yield {
         type: "tool-call",
-        toolCallType: "function",
         toolCallId: `call_2`,
         toolName: "str_replace_editor",
-        args: JSON.stringify({
+        input: JSON.stringify({
           command: "str_replace",
           path: `/components/${componentName}.jsx`,
           old_str: this.getOldStringForReplace(componentType),
@@ -139,6 +138,7 @@ export class MockLanguageModel implements LanguageModelV2 {
         usage: {
           inputTokens: 50,
           outputTokens: 30,
+          totalTokens: 80,
         },
       };
       return;
@@ -157,10 +157,9 @@ export class MockLanguageModel implements LanguageModelV2 {
 
       yield {
         type: "tool-call",
-        toolCallType: "function",
         toolCallId: `call_3`,
         toolName: "str_replace_editor",
-        args: JSON.stringify({
+        input: JSON.stringify({
           command: "create",
           path: "/App.jsx",
           file_text: this.getAppCode(componentName),
@@ -173,6 +172,7 @@ export class MockLanguageModel implements LanguageModelV2 {
         usage: {
           inputTokens: 50,
           outputTokens: 30,
+          totalTokens: 80,
         },
       };
       return;
@@ -201,6 +201,7 @@ The component is now ready to use. You can see the preview on the right side of 
         usage: {
           inputTokens: 50,
           outputTokens: 50,
+          totalTokens: 100,
         },
       };
       return;
@@ -455,35 +456,42 @@ export default function App() {
       .map((p) => (p as any).delta)
       .join("");
 
-    const toolCalls = parts
+    const toolCallParts = parts
       .filter((p) => p.type === "tool-call")
       .map((p) => ({
-        toolCallType: "function" as const,
+        type: "tool-call" as const,
         toolCallId: (p as any).toolCallId,
         toolName: (p as any).toolName,
-        args: (p as any).args,
+        input: JSON.parse((p as any).input),
       }));
 
     // Get finish reason from finish part
     const finishPart = parts.find((p) => p.type === "finish") as any;
     const finishReason = finishPart?.finishReason || "stop";
 
+    // Build content array with text and tool calls
+    const content: any[] = [];
+    if (textParts) {
+      content.push({ type: "text" as const, text: textParts });
+    }
+    content.push(...toolCallParts);
+
     return {
-      text: textParts,
-      toolCalls,
+      content,
       finishReason: finishReason as any,
       usage: {
         inputTokens: 100,
         outputTokens: 200,
+        totalTokens: 300,
       },
-      warnings: [],
-      rawCall: {
-        rawPrompt: options.prompt,
-        rawSettings: {
+      request: {
+        body: {
+          prompt: options.prompt,
           maxOutputTokens: options.maxOutputTokens,
           temperature: options.temperature,
         },
       },
+      warnings: [],
     };
   }
 
@@ -509,12 +517,12 @@ export default function App() {
 
     return {
       stream,
-      warnings: [],
-      rawCall: {
-        rawPrompt: options.prompt,
-        rawSettings: {},
+      request: {
+        body: options.prompt,
       },
-      rawResponse: { headers: {} },
+      response: {
+        headers: {},
+      },
     };
   }
 }
