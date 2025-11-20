@@ -47,6 +47,12 @@ npm run db:reset         # Reset database (force)
 npx prisma studio        # Open Prisma Studio GUI
 ```
 
+**Schema location**: `@prisma/schema.prisma` - The source of truth for database structure.
+
+Reference this file to understand the complete data structure.
+
+The database uses SQLite
+
 ## Architecture
 
 ### Virtual File System
