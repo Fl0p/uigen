@@ -63,7 +63,7 @@ test("MessageList renders messages with parts", () => {
         {
           type: "tool-str_replace_editor",
           toolCallId: "asdf",
-          input: {},
+          input: { command: "create", path: "/Counter.jsx" },
           state: "output-available",
           output: "Success",
         },
@@ -74,7 +74,7 @@ test("MessageList renders messages with parts", () => {
   render(<MessageList messages={messages} />);
 
   expect(screen.getByText("Creating your component...")).toBeDefined();
-  expect(screen.getByText("str_replace_editor")).toBeDefined();
+  expect(screen.getByText("Creating Counter.jsx")).toBeDefined();
 });
 
 test("MessageList shows content for assistant message with parts", () => {
@@ -257,6 +257,187 @@ test("MessageList handles messages with parts", () => {
   render(<MessageList messages={messages} />);
 
   expect(screen.getByText("This is from parts")).toBeDefined();
+});
+
+test("MessageList displays user-friendly label for create operation", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test1",
+          input: { command: "create", path: "/App.jsx" },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Creating App.jsx")).toBeDefined();
+});
+
+test("MessageList displays user-friendly label for edit operation", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test2",
+          input: { command: "str_replace", path: "/Button.jsx" },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Editing Button.jsx")).toBeDefined();
+});
+
+test("MessageList displays user-friendly label for view operation", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test3",
+          input: { command: "view", path: "/styles.css" },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Viewing styles.css")).toBeDefined();
+});
+
+test("MessageList displays user-friendly label for delete operation", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-file_manager",
+          toolCallId: "test4",
+          input: { command: "delete", path: "/old-file.js" },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Deleting old-file.js")).toBeDefined();
+});
+
+test("MessageList displays user-friendly label for rename operation with arrow", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-file_manager",
+          toolCallId: "test5",
+          input: {
+            command: "rename",
+            path: "/Old.jsx",
+            new_path: "/New.jsx"
+          },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Renaming Old.jsx → New.jsx")).toBeDefined();
+});
+
+test("MessageList displays filename only, not full path", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test6",
+          input: { command: "create", path: "/components/ui/Button.jsx" },
+          state: "output-available",
+          output: "Success",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Creating Button.jsx")).toBeDefined();
+  expect(screen.queryByText("Creating /components/ui/Button.jsx")).toBeNull();
+});
+
+test("MessageList shows streaming state with ellipsis", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test7",
+          input: { command: "create", path: "/Loading.jsx" },
+          state: "input-streaming",
+          output: undefined,
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Creating Loading.jsx...")).toBeDefined();
+});
+
+test("MessageList shows error state with Failed prefix", () => {
+  const messages: UIMessage[] = [
+    {
+      id: "1",
+      role: "assistant",
+      parts: [
+        {
+          type: "tool-str_replace_editor",
+          toolCallId: "test8",
+          input: { command: "create", path: "/Error.jsx" },
+          state: "output-error",
+          errorText: "File already exists",
+        },
+      ],
+    },
+  ];
+
+  render(<MessageList messages={messages} />);
+
+  expect(screen.getByText("Failed: Creating Error.jsx")).toBeDefined();
 });
 
 test("MessageList shows loading for assistant message with empty parts", () => {
