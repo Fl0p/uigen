@@ -2,7 +2,7 @@ import type {
     ToolInvocation,
     Message as V4Message,
     UIMessage as LegacyUIMessage,
-  } from 'ai-legacy';
+  } from './types/ai-legacy';
   import type { JSONValue, ToolUIPart, UIMessage, UITools } from 'ai';
 
   export type MyUIMessage = UIMessage<never, { custom: JSONValue }, UITools>;

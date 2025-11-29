@@ -98,11 +98,10 @@ describe("ChatContext", () => {
 
     expect(useAIChat).toHaveBeenCalledWith({
       initialMessages,
-      body: {
-        files: mockFileSystem.serialize(),
-        projectId: "test-project",
-      },
+      experimental_prepareRequestBody: expect.any(Function),
       onToolCall: expect.any(Function),
+      onError: expect.any(Function),
+      onFinish: expect.any(Function),
       transport: expect.any(Object),
     });
 
