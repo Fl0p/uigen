@@ -9,13 +9,24 @@ AI-powered React component generator with live preview.
 
 ## Setup
 
-1. **Optional** Edit `.env` and add your Anthropic API key:
+1. **Optional** Edit `.env` and add your AI provider API key:
 
-```
-ANTHROPIC_API_KEY=your-api-key-here
+```bash
+# Using OpenRouter (recommended - official @openrouter/ai-sdk-provider)
+PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-v1-your-key-here
+OPENROUTER_MODEL=anthropic/claude-sonnet-4.5
+
+# OR using Anthropic directly (legacy)
+PROVIDER=anthropic
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 ```
 
-The project will run without an API key. Rather than using a LLM to generate components, static code will be returned instead.
+The project will run without an API key using a mock provider that generates static components.
+
+Get your API keys:
+- **OpenRouter**: https://openrouter.ai (recommended, access to multiple AI models)
+- **Anthropic**: https://console.anthropic.com (direct Claude API access)
 
 2. Install dependencies and initialize database
 

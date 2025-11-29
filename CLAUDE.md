@@ -121,8 +121,21 @@ Tests are located in `__tests__` directories next to source files. The `src/lib/
 **Critical**: The Prisma client is generated to `src/generated/prisma` (not the default `node_modules/@prisma/client`). This is configured in `prisma/schema.prisma` with `output = "../src/generated/prisma"`.
 
 ### Environment Variables
-- `ANTHROPIC_API_KEY` - Optional. If not set, the mock provider generates static components.
+- `PROVIDER` - Выбор провайдера: `openrouter`, `anthropic`, `mock` (опционально, автоопределение)
+- `OPENROUTER_API_KEY` - API ключ OpenRouter (рекомендуется) - использует официальный `@openrouter/ai-sdk-provider`
+- `OPENROUTER_MODEL` - Модель для OpenRouter (по умолчанию: `anthropic/claude-sonnet-4.5`)
+- `ANTHROPIC_API_KEY` - API ключ Anthropic (legacy, опционально)
+- `ANTHROPIC_MODEL` - Модель Anthropic (по умолчанию: `claude-haiku-4-5`)
 - Database URL is hardcoded in schema as `file:./dev.db` (SQLite)
+
+**Приоритет провайдеров:**
+1. Если установлен `PROVIDER` → использовать указанный провайдер
+2. Иначе: OpenRouter (если есть ключ) → Anthropic (если есть ключ) → Mock
+
+**Рекомендуемые модели OpenRouter:**
+- `anthropic/claude-sonnet-4.5` - Новейший Sonnet, лучшее качество ($3/$15 per 1M tokens)
+- `anthropic/claude-3.5-haiku` - Быстро и дешево ($1/$5 per 1M tokens)
+- `deepseek/deepseek-chat` - Очень дешево для разработки ($0.14/$0.28 per 1M)
 
 ## Common Patterns
 

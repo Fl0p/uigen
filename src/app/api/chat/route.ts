@@ -8,6 +8,7 @@ import { getSession } from "@/lib/auth";
 import { getLanguageModel } from "@/lib/provider";
 import { generationPrompt } from "@/lib/prompts/generation";
 import { convertV5MessageToV4 } from "@/lib/convert-messages";
+import { supportsPromptCaching, getProviderType } from "@/lib/ai/config";
 
 export async function POST(req: Request) {
   console.log('[API] 🚀 Chat request received');
@@ -32,24 +33,29 @@ export async function POST(req: Request) {
   }
   console.log('[API] 💾 File system reconstructed');
 
-  // Prepare system message with cache control
-  const systemMessage = {
-    role: "system" as const,
-    content: generationPrompt,
-    providerOptions: {
-      anthropic: { cacheControl: { type: "ephemeral" } },
-    },
-  };
+  // Prepare system message with conditional cache control
+  const systemMessage = supportsPromptCaching()
+    ? {
+        role: "system" as const,
+        content: generationPrompt,
+        providerOptions: {
+          anthropic: { cacheControl: { type: "ephemeral" } },
+        },
+      }
+    : {
+        role: "system" as const,
+        content: generationPrompt,
+      };
 
   // Convert UIMessages to model messages and add system message
   const modelMessages = convertToModelMessages(messages);
   modelMessages.unshift(systemMessage);
 
   const model = getLanguageModel();
-  // Use fewer steps for mock provider to prevent repetition
-  const isMockProvider = !process.env.ANTHROPIC_API_KEY;
-  
-  console.log('[API] 🤖 Using', isMockProvider ? 'MOCK' : 'ANTHROPIC', 'provider');
+  const providerType = getProviderType();
+  const isMockProvider = providerType === "mock";
+
+  console.log('[API] 🤖 Active provider:', providerType.toUpperCase());
   console.log('[API] 📤 Starting stream with', modelMessages.length, 'messages');
   
   const result = streamText({

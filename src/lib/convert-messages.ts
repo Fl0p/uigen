@@ -100,7 +100,7 @@ import type {
       output:
         toolInvocation.state === 'result' ? toolInvocation.result : undefined,
       state: convertToolInvocationState(toolInvocation.state),
-    };
+    } as ToolUIPart;
   }
 
   // Part converters
@@ -163,7 +163,7 @@ import type {
       parts: [
         {
           type: 'data-custom',
-          data: msg.data || msg.content,
+          data: (msg.data || msg.content || {}) as JSONValue,
         },
       ],
     };
@@ -231,12 +231,12 @@ import type {
     const base = {
       toolCallId: part.toolCallId,
       toolName,
-      args: part.input,
+      args: part.input as Record<string, unknown>,
       state,
     };
 
     if (state === 'result' && part.output !== undefined) {
-      return { ...base, state: 'result' as const, result: part.output };
+      return { ...base, state: 'result' as const, result: part.output } as ToolInvocation;
     }
 
     return base as ToolInvocation;

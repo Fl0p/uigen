@@ -1,11 +1,11 @@
 import { anthropic } from "@ai-sdk/anthropic";
+import { openrouter } from "@openrouter/ai-sdk-provider";
 import {
   LanguageModelV2,
   LanguageModelV2StreamPart,
   LanguageModelV2Message,
 } from "@ai-sdk/provider";
-
-const MODEL = "claude-haiku-4-5";
+import { getProviderConfig } from "@/lib/ai/config";
 
 export class MockLanguageModel implements LanguageModelV2 {
   readonly specificationVersion = "v2" as const;
@@ -529,12 +529,24 @@ export default function App() {
 }
 
 export function getLanguageModel() {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const config = getProviderConfig();
 
-  if (!apiKey || apiKey.trim() === "") {
-    console.log("No ANTHROPIC_API_KEY found, using mock provider");
-    return new MockLanguageModel("mock-claude-sonnet-4-0");
+  switch (config.provider) {
+    case "openrouter": {
+      console.log(`[Provider] 🌐 Using OpenRouter with model: ${config.model}`);
+      // OpenRouter SDK automatically reads OPENROUTER_API_KEY from environment
+      return openrouter(config.model);
+    }
+
+    case "anthropic": {
+      console.log(`[Provider] 🤖 Using Anthropic with model: ${config.model}`);
+      return anthropic(config.model);
+    }
+
+    case "mock":
+    default: {
+      console.log(`[Provider] 🎭 Using Mock provider`);
+      return new MockLanguageModel(config.model);
+    }
   }
-
-  return anthropic(MODEL);
 }
