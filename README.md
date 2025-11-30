@@ -4,6 +4,8 @@ AI-powered React component generator with live preview.
 
 ![UIGen Screenshot](img.png)
 
+> This project was created as part of the [Claude Code in Action](https://anthropic.skilljar.com/claude-code-in-action) course by Anthropic Academy.
+
 ## Prerequisites
 
 - Node.js 18+
