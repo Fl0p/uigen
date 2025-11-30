@@ -39,6 +39,9 @@ yarn-error.log*
 
 .cursorignore
 
+# hooks logs
+/hooks/logs
+
 # vercel
 .vercel
 
